@@ -7,7 +7,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from api_yamdb.settings import EMAIL_SENDER
@@ -35,7 +34,6 @@ class TitleVeiwSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
-    pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
 
@@ -44,7 +42,6 @@ class CategoryViewSet(CreateListDestroyMixin):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
-    pagination_class = PageNumberPagination
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -54,7 +51,6 @@ class GenreViewSet(CreateListDestroyMixin):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
-    pagination_class = PageNumberPagination
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
