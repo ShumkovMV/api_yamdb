@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api_yamdb.settings import SIGNUP_SENDER_EMAIL
+from api_yamdb.settings import EMAIL_SENDER
 from users.models import CustomUser
 
 from .serializers import (
@@ -62,7 +62,7 @@ def registration(request):
     send_mail(
         subject='Регистрация аккаунта',
         message=f'Код подтверждения: {confirmation_code}',
-        from_email=SIGNUP_SENDER_EMAIL,
+        from_email=EMAIL_SENDER,
         recipient_list=[user.email],
     )
 

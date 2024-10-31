@@ -121,18 +121,7 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 DOMAIN_NAME = 'yamdb.ru'
 
-SIGNUP_SENDER_EMAIL = f'signup@{DOMAIN_NAME}'
-
-'''
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'yamdb@gmail.com'
-EMAIL_HOST_PASSWORD = 'changeit'
-DEFAULT_FROM_EMAIL = 'yamdb@gmail.com'
-'''
-# Static files (CSS, JavaScript, Images)
+EMAIL_SENDER = f'signup@{DOMAIN_NAME}'
 
 STATIC_URL = '/static/'
 
