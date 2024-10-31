@@ -6,6 +6,7 @@ from rest_framework.validators import ValidationError
 
 from .models import Category, Genre, Title
 from users.models import CustomUser
+from reviews.models import Review, Comments
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -91,3 +92,33 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ('name', 'slug')
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True)
+	
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date',)
+        model = Review
+
+    def validate(self, data):
+        if self.context['request'].method != 'POST':
+            return data
+        user = self.context['request'].user
+        title_id = self.context['view'].kwargs['title_id']
+        if Review.objects.filter(author=user, title_id=title_id).exists():
+            raise serializers.ValidationError(
+                'Отзыв можно оставить только один раз!'
+            )
+        return data
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(slug_field='username',
+                                          read_only=True)
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date',)
+        model = Comments
