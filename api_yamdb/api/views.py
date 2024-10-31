@@ -1,7 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +12,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from api_yamdb.settings import EMAIL_SENDER
 from users.models import CustomUser
+
+from .mixins import CreateListDestroyMixin
 
 from .serializers import (
     RegistrationSerializer,
@@ -37,8 +39,7 @@ class TitleVeiwSet(viewsets.ModelViewSet):
     filterset_fields = ('category', 'genre', 'name', 'year')
 
 
-class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                      mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class CategoryViewSet(CreateListDestroyMixin):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
@@ -47,8 +48,7 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
     search_fields = ('name',)
 
 
-class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                   mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class GenreViewSet(CreateListDestroyMixin):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
