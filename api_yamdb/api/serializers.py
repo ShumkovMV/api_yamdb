@@ -4,9 +4,14 @@ from django.db.utils import IntegrityError
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
-from .models import Category, Genre, Title
+from reviews.models import (
+    Category,
+    Genre,
+    Title,
+    Review,
+    Comments
+)
 from users.models import CustomUser
-from reviews.models import Review, Comments
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -51,6 +56,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         except IntegrityError:
             raise ValidationError('Имя пользователя или email не валидно')
         return user
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError('Имя "me" не валидно')
+        return value
 
     class Meta:
         fields = ('username', 'email')
@@ -98,7 +108,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True)
-	
+
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date',)
         model = Review

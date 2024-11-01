@@ -1,17 +1,17 @@
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from users.models import CustomUser
+# validators
 
-from .validators import validate_year
+User = CustomUser
 
-User = get_user_model()
+
+from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(verbose_name='Название',
-                            max_length=256, db_index=True)
-    slug = models.SlugField(verbose_name='Slug',
-                            max_length=50, unique=True, db_index=True)
+    name = models.CharField(max_length=256, verbose_name='Название')
+    slug = models.SlugField(max_length=50, unique=True, verbose_name='Слаг')
 
     class Meta:
         verbose_name = 'Категория'
@@ -39,13 +39,13 @@ class Title(models.Model):
     name = models.CharField(verbose_name='Название',
                             max_length=256, db_index=True)
     year = models.IntegerField(verbose_name='Год создания',
-                               db_index=True, validators=[validate_year])
+                               db_index=True,)  # validators
     description = models.TextField(verbose_name='Описание')
     genre = models.ManyToManyField(Genre, verbose_name='Жанр',
                                    related_name='titles')
     category = models.ForeignKey(Category, verbose_name='Категория',
                                  related_name='titles',
-                                 on_delete=models.SET_NULL)
+                                 on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Произведение'
