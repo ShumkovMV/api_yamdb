@@ -6,9 +6,11 @@ from rest_framework import permissions, status, viewsets, mixins, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import PageNumberPagination
+
+from .filters import TitleFilter
 
 from .permissions import (
     ModerAdminAuthorPermission,
@@ -28,7 +30,8 @@ from .serializers import (
     UserSerializer,
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleGetSerializer,
+    TitlePostSerializer,
     ReviewSerializer,
     CommentsSerializer
 )
@@ -82,13 +85,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+class TitleVeiwSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'description', 'year', 'category', 'genre')
+    filterset_class = TitleFilter
 
     def get_permissions(self):
         if self.request.method in ['POST', 'PATCH', 'DELETE']:
@@ -99,6 +100,11 @@ class TitleViewSet(viewsets.ModelViewSet):
         return Title.objects.annotate(
             rating=Avg('reviews__score')
         ).order_by('-rating')
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TitleGetSerializer
+        return TitlePostSerializer
 
 
 class CategoryViewSet(CreateListDestroyMixin):
@@ -188,7 +194,10 @@ def get_token(request):
     if default_token_generator.check_token(
         user, serializer.validated_data['confirmation_code']
     ):
-        token = AccessToken.for_user(user)
-        return Response({'token': str(token)}, status=status.HTTP_200_OK)
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {'token': str(refresh.access_token)},
+            status=status.HTTP_200_OK
+        )
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
