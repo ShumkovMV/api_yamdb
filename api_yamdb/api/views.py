@@ -8,6 +8,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import PageNumberPagination
 
 from .permissions import (
     ModerAdminAuthorPermission,
@@ -31,7 +32,7 @@ from .serializers import (
     ReviewSerializer,
     CommentsSerializer
 )
-
+from rest_framework.permissions import AllowAny
 from .permissions import AnonReadOnlyOrIsAdminPermission, IsAdminPermission
 
 from reviews.models import Title, Review, Comments, Category, Genre
