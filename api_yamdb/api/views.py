@@ -139,7 +139,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 status=401
             )
-
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
