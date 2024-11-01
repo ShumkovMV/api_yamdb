@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from users.models import CustomUser
@@ -36,16 +37,30 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(verbose_name='Название',
-                            max_length=256, db_index=True)
-    year = models.IntegerField(verbose_name='Год создания',
-                               db_index=True,)  # validators
-    description = models.TextField(verbose_name='Описание')
-    genre = models.ManyToManyField(Genre, verbose_name='Жанр',
-                                   related_name='titles', through='GenreTitle')
-    category = models.ForeignKey(Category, verbose_name='Категория',
-                                 related_name='titles',
-                                 on_delete=models.CASCADE)
+    name = models.CharField(
+        verbose_name='Название',
+        max_length=256, db_index=True
+    )
+    year = models.IntegerField(
+        verbose_name='Год создания',
+        validators=[MaxValueValidator(int(datetime.now().year))],
+        db_index=True,
+    )
+    description = models.TextField(
+        verbose_name='Описание'
+    )
+    genre = models.ManyToManyField(
+        Genre,
+        verbose_name='Жанр',
+        related_name='titles',
+        through='GenreTitle'
+    )
+    category = models.ForeignKey(
+        Category,
+        verbose_name='Категория',
+        related_name='titles',
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = 'Произведение'
@@ -95,8 +110,7 @@ class Review(models.Model):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[MinValueValidator(1),
-                    MaxValueValidator(10)],
-                    db_index=True)
+                    MaxValueValidator(10)], db_index=True)
     pub_date = models.DateTimeField(verbose_name='Дата публикации',
                                     auto_now_add=True, db_index=True)
     title = models.ForeignKey(Title, verbose_name='Произведение',

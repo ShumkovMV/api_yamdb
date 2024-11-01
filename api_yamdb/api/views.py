@@ -82,17 +82,17 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class TitleVeiwSet(viewsets.ModelViewSet):
+class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_fields = ('name', 'description', 'year', 'category', 'genre')
 
     def get_permissions(self):
         if self.request.method in ['POST', 'PATCH', 'DELETE']:
-            return [IsAdminPermission()]
+            return [AnonReadOnlyOrIsAdminPermission()]
         return [AllowAny()]
 
     def get_queryset(self):
