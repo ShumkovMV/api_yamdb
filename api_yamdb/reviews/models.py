@@ -3,11 +3,9 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from users.models import CustomUser
 # validators
+from django.db import models
 
 User = CustomUser
-
-
-from django.db import models
 
 
 class Category(models.Model):

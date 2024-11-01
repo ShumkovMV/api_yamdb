@@ -85,7 +85,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class TitleVeiwSet(viewsets.ModelViewSet):
+class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     filter_backends = (DjangoFilterBackend,)
