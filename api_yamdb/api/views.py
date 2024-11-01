@@ -1,74 +1,62 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Avg
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets, mixins, filters
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import PageNumberPagination
-
-from .filters import TitleFilter
-
-from .permissions import (
-    ModerAdminAuthorPermission,
-    IsAdminPermission,
-    AnonReadOnlyOrIsAdminPermission,
-)
 
 from api_yamdb.settings import EMAIL_SENDER
-from users.models import CustomUser
-
+from .filters import TitleFilter
 from .mixins import CreateListDestroyMixin
-
+from .permissions import (
+    AnonReadOnlyOrIsAdminPermission,
+    IsAdminPermission,
+    ModerAdminAuthorPermission,
+)
 from .serializers import (
-    RegistrationSerializer,
-    TokenSerializer,
     BaseUserSerializer,
-    UserSerializer,
     CategorySerializer,
+    CommentsSerializer,
     GenreSerializer,
+    RegistrationSerializer,
+    ReviewSerializer,
     TitleGetSerializer,
     TitlePostSerializer,
-    ReviewSerializer,
-    CommentsSerializer
+    TokenSerializer,
 )
-from rest_framework.permissions import AllowAny
-from .permissions import AnonReadOnlyOrIsAdminPermission, IsAdminPermission
-
-from reviews.models import Title, Review, Comments, Category, Genre
+from reviews.models import Category, Comments, Genre, Review, Title
+from users.models import CustomUser
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (
-        ModerAdminAuthorPermission,
-        AnonReadOnlyOrIsAdminPermission
-    )
-    pagination_class = PageNumberPagination
-    filter_backends = set()
+    permission_classes = (ModerAdminAuthorPermission,)
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
-        return title.reviews.all()
+        title_id = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        return title_id.reviews.all()
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
+        title_id = self.kwargs.get("title_id")
         title = get_object_or_404(Title, pk=title_id)
-        user = self.request.user
-        serializer.save(author=user, title=title)
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (
         ModerAdminAuthorPermission,
-        AnonReadOnlyOrIsAdminPermission
     )
     pagination_class = PageNumberPagination
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -93,7 +81,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.request.method in ['POST', 'PATCH', 'DELETE']:
-            return [AnonReadOnlyOrIsAdminPermission()]
+            return [IsAdminPermission()]
         return [AllowAny()]
 
     def get_queryset(self):
@@ -108,7 +96,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(CreateListDestroyMixin):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     lookup_field = 'slug'
@@ -122,7 +110,7 @@ class CategoryViewSet(CreateListDestroyMixin):
 
 
 class GenreViewSet(CreateListDestroyMixin):
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     lookup_field = 'slug'
@@ -136,7 +124,7 @@ class GenreViewSet(CreateListDestroyMixin):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    queryset = CustomUser.objects.all().order_by('username')
     serializer_class = BaseUserSerializer
 
     lookup_field = 'username'
@@ -147,6 +135,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, permission_classes=(ModerAdminAuthorPermission,))
     def me(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                status=401
+            )
+
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 

@@ -1,6 +1,8 @@
 import datetime as dt
+
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db.utils import IntegrityError
+
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
