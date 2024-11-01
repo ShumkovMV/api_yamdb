@@ -3,12 +3,10 @@ from django.db.models import Avg
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets, mixins, filters
-from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .permissions import (
@@ -19,6 +17,8 @@ from .permissions import (
 
 from api_yamdb.settings import EMAIL_SENDER
 from users.models import CustomUser
+
+from .mixins import CreateListDestroyMixin
 
 from .serializers import (
     RegistrationSerializer,
@@ -32,7 +32,7 @@ from .serializers import (
     CommentsSerializer
 )
 
-from .permissions import IsAdminPermission
+from .permissions import AnonReadOnlyOrIsAdminPermission, IsAdminPermission
 
 from reviews.models import Title, Review, Comments, Category, Genre
 
@@ -85,7 +85,7 @@ class TitleVeiwSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
-    pagination_class = PageNumberPagination
+    permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
 
@@ -100,11 +100,10 @@ class TitleVeiwSet(viewsets.ModelViewSet):
         ).order_by('-rating')
 
 
-class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                      mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class CategoryViewSet(CreateListDestroyMixin):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
@@ -115,11 +114,10 @@ class CategoryViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
         return [AllowAny()]
 
 
-class GenreViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
-                   mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class GenreViewSet(CreateListDestroyMixin):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = PageNumberPagination
+    permission_classes = (AnonReadOnlyOrIsAdminPermission,)
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
