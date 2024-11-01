@@ -1,5 +1,5 @@
 from rest_framework import permissions
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsAdminPermission(permissions.BasePermission):
@@ -38,4 +38,4 @@ class AnonReadOnlyOrIsAdminPermission(permissions.BasePermission):
         )
 
     def is_admin_or_superuser(self, user):
-        return user.is_admin or user.is_superuser
+        return user.is_staff or user.is_superuser

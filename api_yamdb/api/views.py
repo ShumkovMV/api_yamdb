@@ -93,7 +93,7 @@ class TitleVeiwSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.request.method in ['POST', 'PATCH', 'DELETE']:
-            return [IsAdminPermission()]
+            return [AnonReadOnlyOrIsAdminPermission()]
         return [AllowAny()]
 
     def get_queryset(self):
