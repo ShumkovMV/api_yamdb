@@ -42,7 +42,7 @@ class Title(models.Model):
                                db_index=True,)  # validators
     description = models.TextField(verbose_name='Описание')
     genre = models.ManyToManyField(Genre, verbose_name='Жанр',
-                                   related_name='titles')
+                                   related_name='titles', through='GenreTitle')
     category = models.ForeignKey(Category, verbose_name='Категория',
                                  related_name='titles',
                                  on_delete=models.CASCADE)
@@ -53,6 +53,38 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class GenreTitle(models.Model):
+    title = models.ForeignKey(
+        Title,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='titles',
+        verbose_name='Произведение'
+    )
+    genre = models.ForeignKey(
+        Genre,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='genres',
+        verbose_name='Жанр'
+    )
+
+    class Meta:
+        verbose_name = 'Жанр произведения'
+        verbose_name_plural = 'Жанры произведения'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'genre'],
+                name='unique_title_genre'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.title} - {self.genre}'
 
 
 class Review(models.Model):
