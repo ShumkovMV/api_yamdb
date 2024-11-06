@@ -1,5 +1,13 @@
+import re
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
+
+from .constants import (
+    BIO_MAX_LENGTH,
+    EMAIL_MAX_LENGTH,
+    ROLE_MAX_LENGTH
+)
 
 
 class CustomUser(AbstractUser):
@@ -15,18 +23,18 @@ class CustomUser(AbstractUser):
     ]
 
     email = models.EmailField(
-        max_length=150,
+        max_length=EMAIL_MAX_LENGTH,
         unique=True,
         verbose_name='Электронная почта')
 
     bio = models.TextField(
-        max_length=2000,
+        max_length=BIO_MAX_LENGTH,
         blank=True,
         null=True,
         verbose_name='Биография')
 
     role = models.CharField(
-        max_length=10,
+        max_length=ROLE_MAX_LENGTH,
         choices=ROLE,
         default=USER,
         verbose_name='Роль'
@@ -55,5 +63,24 @@ class CustomUser(AbstractUser):
         blank=True,
     )
 
+    @property
+    def post_count(self):
+        return self.posts.count()
+
     def __str__(self):
         return self.username
+
+    def clean(self):
+        if not re.match(r'^[a-zA-Z0-9_]+$', self.username):
+            raise ValidationError(
+                'Имя пользователя может содержать только буквы,'
+                'цифры и знаки подчеркивания.'
+            )
+
+        # Запрет на использование имени 'me'
+        if self.username.lower() == 'me':
+            raise ValidationError('Имя пользователя не может быть "me".')
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

@@ -1,16 +1,25 @@
 from datetime import datetime
 
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from users.models import CustomUser
+from .constants import (
+    NAME_MAX_LENGTH,
+    SLUG_MAX_LENGTH,
+    MIN,
+    MAX
+)
 
 User = CustomUser
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256, verbose_name='Название')
-    slug = models.SlugField(max_length=50, unique=True, verbose_name='Слаг')
+    name = models.CharField(max_length=NAME_MAX_LENGTH,
+                            verbose_name='Название')
+    slug = models.SlugField(max_length=SLUG_MAX_LENGTH,
+                            unique=True, verbose_name='Слаг')
 
     class Meta:
         verbose_name = 'Категория'
@@ -22,9 +31,10 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(verbose_name='Название',
-                            max_length=256, db_index=True)
+                            max_length=NAME_MAX_LENGTH, db_index=True)
     slug = models.SlugField(verbose_name='Slug',
-                            max_length=50, unique=True, db_index=True)
+                            max_length=SLUG_MAX_LENGTH, unique=True,
+                            db_index=True)
 
     class Meta:
         verbose_name = 'Жанр'
@@ -34,14 +44,20 @@ class Genre(models.Model):
         return self.name
 
 
+def validate_year(value):
+    current_year = datetime.now().year
+    if value > current_year:
+        raise ValidationError(f'Год не может превышать {current_year}.')
+
+
 class Title(models.Model):
     name = models.CharField(
         verbose_name='Название',
         max_length=256, db_index=True
     )
-    year = models.IntegerField(
+    year = models.SmallIntegerField(
         verbose_name='Год создания',
-        validators=[MaxValueValidator(int(datetime.now().year))],
+        validators=[validate_year],
         db_index=True,
     )
     description = models.TextField(
@@ -57,7 +73,9 @@ class Title(models.Model):
         Category,
         verbose_name='Категория',
         related_name='titles',
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
 
     class Meta:
@@ -107,8 +125,8 @@ class Review(models.Model):
                                on_delete=models.CASCADE)
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
-        validators=[MinValueValidator(1),
-                    MaxValueValidator(10)], db_index=True)
+        validators=[MinValueValidator(MIN),
+                    MaxValueValidator(MAX)], db_index=True)
     pub_date = models.DateTimeField(verbose_name='Дата публикации',
                                     auto_now_add=True, db_index=True)
     title = models.ForeignKey(Title, verbose_name='Произведение',

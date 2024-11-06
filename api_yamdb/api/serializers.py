@@ -13,6 +13,11 @@ from reviews.models import (
     Review,
     Comments
 )
+from .constants import (
+    USERNAME_MAX_LENGTH,
+    EMAIL_MAX_LENGTH
+)
+
 from users.models import CustomUser
 
 
@@ -30,16 +35,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(BaseUserSerializer):
-    class Meta:
-        model = CustomUser
-        fields = (
-            'username',
-            'email',
-            'role',
-            'bio',
-            'first_name',
-            'last_name',
-        )
+    class Meta(BaseUserSerializer.Meta):
         read_only_fields = ('role',)
 
 
@@ -48,21 +44,26 @@ class RegistrationSerializer(serializers.ModelSerializer):
         validators=[
             UnicodeUsernameValidator(),
         ],
-        max_length=128,
+        max_length=USERNAME_MAX_LENGTH,
     )
-    email = serializers.EmailField(max_length=150)
+    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH)
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError({
+                'username': 'Имя "me" не валидно'
+            })
+        return value
 
     def create(self, validated_data):
         try:
             user, _ = CustomUser.objects.get_or_create(**validated_data)
         except IntegrityError:
-            raise ValidationError('Имя пользователя или email не валидно')
+            raise serializers.ValidationError({
+                'username': 'Имя пользователя или email уже существует',
+                'email': 'Имя пользователя или email уже существует'
+            })
         return user
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError('Имя "me" не валидно')
-        return value
 
     class Meta:
         fields = ('username', 'email')
@@ -82,7 +83,8 @@ class TitlePostSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         many=True,
         slug_field='slug',
-        queryset=Genre.objects.all()
+        queryset=Genre.objects.all(),
+        required=True
     )
 
     class Meta:
@@ -91,9 +93,9 @@ class TitlePostSerializer(serializers.ModelSerializer):
 
     def validate_year(self, value):
         year = dt.date.today().year
-        if not (value < year):
-            raise serializers.ValidationError('Год выпуска не может быть '
-                                              'больше текущего!')
+        if value > year:
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего!')
         return value
 
 
