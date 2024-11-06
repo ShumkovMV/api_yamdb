@@ -148,6 +148,9 @@ class UserViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response(status=401)
 
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
     @me.mapping.patch
     @action(detail=False, methods=['patch'], url_path='me',
             permission_classes=(ModerAdminAuthorPermission,))
