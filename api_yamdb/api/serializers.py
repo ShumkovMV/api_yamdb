@@ -3,7 +3,6 @@ import datetime as dt
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db.utils import IntegrityError
 from rest_framework import serializers
-from rest_framework.validators import ValidationError
 
 from reviews.models import (
     Category,
@@ -89,6 +88,11 @@ class TitlePostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
+
+    def validate_genre(self, value):
+        if value:
+            return value
+        raise serializers.ValidationError('Жанр не может быть пустым!')
 
     def validate_year(self, value):
         year = dt.date.today().year
