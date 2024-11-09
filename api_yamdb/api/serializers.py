@@ -84,6 +84,7 @@ class TitlePostSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         required=True
     )
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
@@ -101,6 +102,12 @@ class TitlePostSerializer(serializers.ModelSerializer):
                 'Год выпуска не может быть больше текущего!')
         return value
 
+    def to_representation(self, instance):
+        self.fields['category'] = CategorySerializer(read_only=True)
+        self.fields['genre'] = GenreSerializer(read_only=True, many=True)
+        data = super(TitlePostSerializer, self).to_representation(instance)
+        return data
+
 
 class CategorySerializer(serializers.ModelSerializer):
 
@@ -117,7 +124,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleGetSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
+    category = CategorySerializer(read_only=True, allow_null=True)
     genre = GenreSerializer(read_only=True, many=True)
     rating = serializers.IntegerField(read_only=True)
 
