@@ -89,6 +89,11 @@ class TitlePostSerializer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
+    def validate_genre(self, value):
+        if value:
+            return value
+        raise serializers.ValidationError('Жанр не может быть пустым!')
+
     def validate_year(self, value):
         year = dt.date.today().year
         if value > year:
