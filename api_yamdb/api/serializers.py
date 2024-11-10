@@ -81,13 +81,18 @@ class TitlePostSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         many=True,
         slug_field='slug',
-        queryset=Genre.objects.all(),
-        required=True
+        queryset=Genre.objects.all()
     )
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Title
         fields = '__all__'
+
+    def validate_genre(self, value):
+        if value:
+            return value
+        raise serializers.ValidationError('Жанр не может быть пустым!')
 
     def validate_year(self, value):
         year = dt.date.today().year
@@ -95,6 +100,10 @@ class TitlePostSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Год выпуска не может быть больше текущего!')
         return value
+
+    def to_representation(self, title):
+        serializer = TitleGetSerializer(title)
+        return serializer.data
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -112,9 +121,9 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleGetSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
+    category = CategorySerializer(read_only=True, allow_null=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = '__all__'
