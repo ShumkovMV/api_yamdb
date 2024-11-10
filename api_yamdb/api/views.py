@@ -4,6 +4,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import Http404
 from rest_framework import permissions, status, viewsets, filters, mixins
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -63,8 +64,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_queryset(self):
-        title_id = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        return title_id.reviews.all()
+        title_id = self.kwargs.get('title_id')
+        title = self.get_title(title_id)
+        return title.reviews.all()
 
     def get_title(self, title_id):
         return get_object_or_404(Title, pk=title_id)
@@ -84,21 +86,25 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_title(self, title_id):
         return get_object_or_404(Title, pk=title_id)
 
-    def get_review(self, review_id):
-        return get_object_or_404(Review, pk=review_id)
+    def get_review(self, title, review_id):
+        review = get_object_or_404(Review, pk=review_id)
+        if review.title != title:
+            raise Http404("Отзыв не принадлежит данному заголовку.")
+        return review
+
+    def get_title_and_review(self):
+        title_id = self.kwargs.get('title_id')
+        title = self.get_title(title_id)
+        review_id = self.kwargs.get('review_id')
+        review = self.get_review(title, review_id)
+        return review
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        self.get_title(title_id)
-        review_id = self.kwargs.get('review_id')
-        review = self.get_review(review_id)
+        review = self.get_title_and_review()
         return Comments.objects.filter(review=review)
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
-        self.get_title(title_id)
-        review_id = self.kwargs.get('review_id')
-        review = self.get_review(review_id)
+        review = self.get_title_and_review()
         serializer.save(author=self.request.user, review=review)
 
 
@@ -130,7 +136,7 @@ class CategoryViewSet(BaseSlugViewSet):
 
 
 class GenreViewSet(BaseSlugViewSet):
-    queryset = Genre.objects.all().order_by('name')
+    queryset = Genre.objects.order_by('name')
     serializer_class = GenreSerializer
 
 
@@ -165,7 +171,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def registration(request):
     serializer = RegistrationSerializer(data=request.data)

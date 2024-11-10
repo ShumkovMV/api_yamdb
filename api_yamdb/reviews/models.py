@@ -53,7 +53,7 @@ def validate_year(value):
 class Title(models.Model):
     name = models.CharField(
         verbose_name='Название',
-        max_length=256, db_index=True
+        max_length=NAME_MAX_LENGTH, db_index=True
     )
     year = models.SmallIntegerField(
         verbose_name='Год создания',
@@ -126,7 +126,9 @@ class Review(models.Model):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[MinValueValidator(MIN),
-                    MaxValueValidator(MAX)], db_index=True)
+                    MaxValueValidator(MAX)],
+        db_index=True)
+    
     pub_date = models.DateTimeField(verbose_name='Дата публикации',
                                     auto_now_add=True, db_index=True)
     title = models.ForeignKey(Title, verbose_name='Произведение',

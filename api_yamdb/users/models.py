@@ -1,4 +1,5 @@
 import re
+
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -77,10 +78,8 @@ class CustomUser(AbstractUser):
                 'цифры и знаки подчеркивания.'
             )
 
-        # Запрет на использование имени 'me'
         if self.username.lower() == 'me':
             raise ValidationError('Имя пользователя не может быть "me".')
 
     def save(self, *args, **kwargs):
-        self.clean()
         super().save(*args, **kwargs)
