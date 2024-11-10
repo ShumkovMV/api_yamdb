@@ -31,7 +31,8 @@ class CustomUser(AbstractUser):
         max_length=BIO_MAX_LENGTH,
         blank=True,
         null=True,
-        verbose_name='Биография')
+        verbose_name='Биография',
+        default='')
 
     role = models.CharField(
         max_length=ROLE_MAX_LENGTH,
