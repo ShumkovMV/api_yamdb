@@ -57,10 +57,17 @@ class RegistrationSerializer(serializers.ModelSerializer):
         try:
             user, _ = CustomUser.objects.get_or_create(**validated_data)
         except IntegrityError:
-            raise serializers.ValidationError({
-                'username': 'Имя пользователя или email уже существует',
-                'email': 'Имя пользователя или email уже существует'
-            })
+            error_mes = {}
+            user_with_username = CustomUser.objects.filter(
+                username__exact=validated_data.get('username'))
+            if user_with_username.exists():
+                error_mes.update(username=['Имя пользователя уже существует'])
+            user_with_email = CustomUser.objects.filter(
+                email__exact=validated_data.get('email'))
+            if user_with_email.exists():
+                error_mes.update(
+                    email=['Пользователь с этим email уже существует'])
+            raise serializers.ValidationError(error_mes)
         return user
 
     class Meta:
