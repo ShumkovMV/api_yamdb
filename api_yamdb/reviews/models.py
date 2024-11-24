@@ -125,7 +125,7 @@ class Review(models.Model):
         validators=[MinValueValidator(MIN),
                     MaxValueValidator(MAX)],
         db_index=True)
-    
+
     pub_date = models.DateTimeField(verbose_name='Дата публикации',
                                     auto_now_add=True, db_index=True)
     title = models.ForeignKey(Title, verbose_name='Произведение',
