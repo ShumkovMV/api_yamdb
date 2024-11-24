@@ -73,12 +73,6 @@ class CustomUser(AbstractUser):
         return self.username
 
     def clean(self):
-        if not re.match(r'^[\w.@+-]+\Z', self.username):
-            raise ValidationError(
-                'Имя пользователя может содержать только буквы,'
-                'цифры и знаки подчеркивания.'
-            )
-
         if self.username.lower() == 'me':
             raise ValidationError('Имя пользователя не может быть "me".')
 

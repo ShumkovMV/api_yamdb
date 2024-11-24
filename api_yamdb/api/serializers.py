@@ -31,6 +31,11 @@ class BaseUserSerializer(serializers.ModelSerializer):
             'last_name',
         )
 
+    def validate(self, attrs):
+        instance = CustomUser(**attrs)
+        instance.clean()
+        return attrs
+
 
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
