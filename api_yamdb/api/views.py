@@ -4,11 +4,10 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import Http404
 from rest_framework import permissions, status, viewsets, filters, mixins
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -87,12 +86,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         return get_object_or_404(Title, pk=title_id)
 
     def get_review(self, title, review_id):
-        review = get_object_or_404(Review, pk=review_id)
-        if review.title != title:
-            raise Http404("Отзыв не принадлежит данному заголовку.")
-        return review
+        return get_object_or_404(Review, pk=review_id, title=title)
 
-    def get_title_and_review(self):
+    def get_title_review(self):
         title_id = self.kwargs.get('title_id')
         title = self.get_title(title_id)
         review_id = self.kwargs.get('review_id')
@@ -100,11 +96,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         return review
 
     def get_queryset(self):
-        review = self.get_title_and_review()
-        return Comments.objects.filter(review=review)
+        review = self.get_title_review()
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        review = self.get_title_and_review()
+        review = self.get_title_review()
         serializer.save(author=self.request.user, review=review)
 
 
@@ -149,11 +145,9 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
-    @action(detail=False, permission_classes=(ModerAdminAuthorPermission,))
+    @action(detail=False, permission_classes=(
+            ModerAdminAuthorPermission, IsAuthenticated))
     def me(self, request):
-        if not request.user.is_authenticated:
-            return Response(status=401)
-
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 

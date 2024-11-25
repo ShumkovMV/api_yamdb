@@ -73,6 +73,3 @@ class CustomUser(AbstractUser):
     def clean(self):
         if self.username.lower() == 'me':
             raise ValidationError('Имя пользователя не может быть "me".')
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
