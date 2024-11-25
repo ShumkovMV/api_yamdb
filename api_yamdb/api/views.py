@@ -29,7 +29,7 @@ from .serializers import (
     TitlePostSerializer,
     TokenSerializer,
 )
-from reviews.models import Category, Comments, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
 from users.models import CustomUser
 
 
